@@ -47,10 +47,10 @@ newEmptySetWithCallBack callb = fmap ISet $ newLVWithCallback S.empty cb
 
 -- | Put a single element in the set.  (WHNF) Strict in the element being put in the
 -- set.
-putInSet_ :: Ord a => a -> ISet a -> Par () 
+putInSet_ :: (Show a, Ord a) => a -> ISet a -> Par () 
 putInSet_ !elem (ISet lv) = putLV lv (S.singleton elem)
 
-putInSet :: (NFData a, Ord a) => a -> ISet a -> Par ()
+putInSet :: (Show a,NFData a, Ord a) => a -> ISet a -> Par ()
 putInSet e s = deepseq e (putInSet_ e s)
 
 -- | Wait for the set to contain a specified element.

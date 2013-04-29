@@ -1,7 +1,7 @@
 {-# LANGUAGE BangPatterns #-}
 
 module Data.LVar.PairPure
-       (
+       ( IPair,
          newPair,
          putFst,
          putSnd,
@@ -20,13 +20,13 @@ newPair :: Par (IPair a b)
 newPair = newLV (IVC Nothing,
                  IVC Nothing)
 
-putFst :: IPair a b -> a -> Par ()
+putFst :: (Show a, Show b) => IPair a b -> a -> Par ()
 putFst lv !elt = putLV lv (IVC (Just elt), IVC Nothing)
 
-putSnd :: IPair a b -> b -> Par ()
+putSnd :: (Show a, Show b) => IPair a b -> b -> Par ()
 putSnd lv !elt = putLV lv (IVC Nothing, IVC (Just elt))
 
-getFst :: IPair a b -> Par a
+getFst :: (Show a, Show b) => IPair a b -> Par a
 getFst lv = getLV lv test
  where
    test (IVC (Just x),_) = Just x

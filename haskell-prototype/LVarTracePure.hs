@@ -58,6 +58,7 @@ import Algebra.Lattice (JoinSemiLattice(..))
 newtype IVar a = IVar (LVar (IVarContents a))
 
 newtype IVarContents a = IVC (Maybe a)
+  deriving Show
 fromIVarContents :: IVarContents a -> Maybe a
 fromIVarContents (IVC x) = x
 
@@ -79,21 +80,22 @@ instance JoinSemiLattice (IVarContents a) where
 -- | put a value into a @IVar@.  Multiple 'put's to the same @IVar@
 -- are not allowed, and result in a runtime error.
 -- put_ :: Eq a => IVar a -> a -> Par ()
-put_ :: IVar a -> a -> Par ()
+put_ :: (Show a) => IVar a -> a -> Par ()
 put_ (IVar iv) elt = putLV iv (IVC (Just elt))
 
-spawn :: NFData a => Par a -> Par (IVar a)
+spawn :: (Show a, NFData a) => Par a -> Par (IVar a)
 spawn p  = do r <- new;  fork (p >>= put r);   return r
               
-spawn_ :: Par a -> Par (IVar a)
+spawn_ :: (Show a) => Par a -> Par (IVar a)
 spawn_ p = do r <- new;  fork (p >>= put_ r);  return r
 
-spawnP :: NFData a => a -> Par (IVar a)
+spawnP :: (Show a, NFData a) => a -> Par (IVar a)
 spawnP a = spawn (return a)
 
-put :: NFData a => IVar a -> a -> Par ()
+put :: (Show a, NFData a) => IVar a -> a -> Par ()
 put v a = deepseq a (put_ v a)
 
+{-
 instance PC.ParFuture IVar Par where
   spawn_ = spawn_
   get = get
@@ -102,6 +104,7 @@ instance PC.ParIVar IVar Par where
   fork = fork  
   put_ = put_
   new = new
+-}
 
 ------------------------------------------------------------------------------
 -- Underlying LVar representation:
@@ -160,7 +163,7 @@ instance Applicative Par where
 -- | Trying this using only parametric polymorphism:
 data Trace =
              forall a b . Get (LVar a) (a -> Maybe b) (b -> Trace)
-           | forall a . JoinSemiLattice a => Put (LVar a) a Trace
+           | forall a . (JoinSemiLattice a, Show a) => Put (LVar a) a Trace
            | forall a . New a (LVar a -> Trace)
            | Fork Trace Trace
            | Done
@@ -233,7 +236,8 @@ sched queue t = loop t
                     woken' = case cb of
                               Nothing -> woken
                               Just fn -> fn a new' : woken
-                in 
+                in
+                trace ("Result of join: "++show new') $  
                 seq new' (LVarContents new' ls', woken')
       mapM_ (pushWork queue) cs
       loop tr              
@@ -398,7 +402,7 @@ getLV :: LVar a -> (a -> Maybe b) -> Par b
 getLV lv test = Par $ Get lv test
 
 -- | Internal operation.  Modify the LVar.  Had better be monotonic.
-putLV :: JoinSemiLattice a => LVar a -> a -> Par ()
+putLV :: (Show a, JoinSemiLattice a) => LVar a -> a -> Par ()
 putLV lv st = Par $ \c -> Put lv st (c ())
 
 -- | Internal operation. Destructively consume the LVar, yielding

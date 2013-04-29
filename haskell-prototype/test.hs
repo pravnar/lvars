@@ -209,14 +209,14 @@ waste_time = loop 1000 3.3
 
 -- More pairs
 case_v6 :: Assertion
-case_v6 = assertEqual "fancy pairs"
-          33 =<< runParIO (
+case_v6 = assertEqual "fancy pairs" (33::Int) =<<
+          runParIO (
      do p1 <- newPair
         p2 <- newPair
-        fork $ do x <- getFst p1
-                  putSnd p2 x 
+        fork $ do x <- getFst (p1 :: IPair Int Int)
+                  putSnd (p2 :: IPair Int Int) x 
         fork $ do x <- getSnd p2
                   putSnd p1 x
-        putFst p1 33
+        putFst p1 (33::Int)
         getSnd p1)
 
