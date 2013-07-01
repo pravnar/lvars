@@ -2,7 +2,12 @@
 
 -- | Utilities for reading PBBS data files, etc.
 
-module Util.PBBS where 
+
+#ifdef MAINMOD
+module Main where 
+#else
+module Util.PBBS where
+#endif
 
 import Control.DeepSeq
 import Control.Exception (evaluate)
