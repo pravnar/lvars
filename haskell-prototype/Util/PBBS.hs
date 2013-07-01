@@ -1,4 +1,4 @@
-{-# LANGUAGE BangPatterns, OverloadedStrings, TemplateHaskell, ScopedTypeVariables, CPP #-}
+{-# LANGUAGE BangPatterns, OverloadedStrings, ScopedTypeVariables, CPP #-}
 
 -- | Utilities for reading PBBS data files, etc.
 
@@ -21,33 +21,10 @@ import Data.ByteString.Unsafe (unsafeTail, unsafeHead)
 import Data.Time.Clock
 import Control.Concurrent.Async
 
--- import qualified Data.ByteString.Word8      as S
--- import qualified Data.ByteString.Lazy.Word8 as L
-
-import System.IO.Posix.MMap (unsafeMMapFile)
-
 import Test.HUnit
 import Test.Framework.Providers.HUnit
-import Test.Framework.TH (defaultMainGenerator)
 
 --------------------------------------------------------------------------------
-
--- How many words shoud go in each continuously allocated vector?
-chunkSize :: Int
-chunkSize = 32768
-
--- | How much should we partition a loop beyond what is necessary to have one task
--- per processor core.
-overPartition = 4
-
---------------------------------------------------------------------------------
-
-
-readNumFile :: (U.Unbox nty, Num nty, Eq nty) =>
-               FilePath -> IO [PartialNums nty]
-readNumFile path = do
-  bs <- unsafeMMapFile path
-  parReadNats bs
 
 -- | Read all the decimal numbers from a Bytestring.  This is very permissive -- all
 -- non-digit characters are treated as separators.
@@ -75,35 +52,6 @@ parReadNats bs = do
         runParIO $                   
           parMapReduceRangeThresh 1 (InclusiveRange 0 (chunks - 1))
                                      mapper reducer []
-#elif 0
-        let loop bs [] acc = mapM get (reverse acc)
-            loop bs (sz:rst) acc = do 
-               let (bs1,bs2) = S.splitAt sz bs
-               liftIO $ putStrLn$ "(monad-par) Launching chunk of "++show sz
-               fut <- spawn_ (liftIO$ readNatsPartial bs1)
-               loop bs2 rst (fut:acc)
-            sizes = replicate (chunks-1) each ++ [each + left]
-        runParIO (loop bs sizes [])
-#elif 0
-        let loop bs [] acc = mapM wait (reverse acc)
-            loop bs (sz:rst) acc = do 
-               let (bs1,bs2) = S.splitAt sz bs
-               putStrLn$ "(async) Launching chunk of "++show sz
-               fut <- async (readNatsPartial bs1)
-               loop bs2 rst (fut:acc)
-            sizes = replicate (chunks-1) each ++ [each + left]
-        loop bs sizes []
-#elif 0 
-#warning "Ok, how about serial..."
-        let loop bs [] acc = return (reverse acc)
-            loop bs (sz:rst) acc = do 
-               let (bs1,bs2) = S.splitAt sz bs
-               putStrLn$ "(SEQUENTIAL) Launching chunk of "++show sz
-               res <- readNatsPartial bs1
-               loop bs2 rst (res:acc)
-            sizes = replicate (chunks-1) each ++ [each + left]
-        putStrLn$ "Sequential debug version running on sizes: "++ show sizes
-        loop bs sizes []
 #else
         putStrLn "Now this is getting ridiculous..."
         res <- readNatsPartial bs
@@ -208,52 +156,6 @@ readNatsPartial bs
 --------------------------------------------------------------------------------
 -- Unit Tests
 --------------------------------------------------------------------------------
-
-case_t1 :: IO ()
-case_t1 = assertEqual "t1" (Compound (Just (RightFrag 3 (123::Word))) (U.fromList []) Nothing) =<<
-          readNatsPartial (S.take 4 "123 4")
-case_t2 = assertEqual "t1" (Compound (Just (RightFrag 3 (123::Word))) (U.fromList []) (Just (LeftFrag 4))) =<<
-          readNatsPartial (S.take 5 "123 4")
-case_t3 = assertEqual "t3" (Single (MiddleFrag 3 (123::Word))) =<<
-          readNatsPartial (S.take 3 "123")
-case_t4 = assertEqual "t4" (Single (MiddleFrag 2 (12::Word))) =<<
-          readNatsPartial (S.take 2 "123")
-case_t5 = assertEqual "t5" (Compound Nothing U.empty (Just (LeftFrag (12::Word64)))) =<<
-          readNatsPartial (S.take 3 " 123")
-
-case_t6 = assertEqual "t6"
-          (Compound (Just (RightFrag 3 23)) (U.fromList [456]) (Just (LeftFrag (78::Word32)))) =<<
-          readNatsPartial (S.take 10 "023 456 789")
-
-runTests = $(defaultMainGenerator)
-
-
-t0 :: IO [PartialNums Word]
-t0 = readNumFile "/tmp/grid_1000"
-
-t1 :: IO [PartialNums Word]
-t1 = readNumFile "/tmp/grid_125000"
-
-t2 :: IO [PartialNums Word]
-t2 = readNumFile "../../pbbs/breadthFirstSearch/graphData/data/3Dgrid_J_10000000"
-
--- This one is fast... but WHY?  It should be the same as the hacked 1-chunk parallel versions.
-t3 :: IO (PartialNums Word)
-t3 = do bs <- unsafeMMapFile "../../pbbs/breadthFirstSearch/graphData/data/3Dgrid_J_10000000"
-        pn <- readNatsPartial bs
-        consume [pn]
-        return pn
-
--- | Try it with readFile...
-t3B :: IO (PartialNums Word)
-t3B = do putStrLn "Sequential version + readFile"
-         t0 <- getCurrentTime
-         bs <- S.readFile "../../pbbs/breadthFirstSearch/graphData/data/3Dgrid_J_10000000"
-         t1 <- getCurrentTime
-         putStrLn$ "Time to read file sequentially: "++show (diffUTCTime t1 t0)
-         pn <- readNatsPartial bs
-         consume [pn]
-         return pn
 
 
 t4 :: IO [PartialNums Word]
