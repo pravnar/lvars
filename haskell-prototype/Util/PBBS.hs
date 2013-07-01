@@ -6,11 +6,9 @@ module Util.PBBS where
 
 import Control.DeepSeq
 import Control.Exception (evaluate)
-import Control.Monad.Par.Class
-import Control.Monad.Par.IO
-import Control.Monad.Par.Combinator
-import Control.Monad.IO.Class (liftIO)
-import Control.Concurrent (getNumCapabilities)
+
+import Control.Concurrent (getNumCapabilities, setNumCapabilities)
+import GHC.Conc (getNumProcessors)
 import Data.Word
 import Data.Maybe (fromJust)
 import qualified Data.Vector.Unboxed as U
@@ -19,22 +17,26 @@ import qualified Data.ByteString as S
 import Data.ByteString.Unsafe (unsafeTail, unsafeHead)
 
 import Data.Time.Clock
-import Control.Concurrent.Async
-
-import Test.HUnit
-import Test.Framework.Providers.HUnit
+import System.Environment
 
 --------------------------------------------------------------------------------
 
 -- | Read all the decimal numbers from a Bytestring.  This is very permissive -- all
 -- non-digit characters are treated as separators.
 parReadNats :: forall nty . (U.Unbox nty, Num nty, Eq nty) =>
---               S.ByteString -> IO [U.Vector nty]
                S.ByteString -> IO [PartialNums nty]
 parReadNats bs = do
 #ifdef ACTIVATE_BUG  
   ncap <- getNumCapabilities
-  putStrLn$ "Read num capabilities as "++show ncap
+  -- ncap <- getNumProcessors -- This has the same effect!!
+  putStrLn$ "Read num capabilities as "++show ncap  
+  --  setNumCapabilities 1; putStrLn "Set num capabilities!"  -- Same effect...
+  -- env <- getEnvironment; putStrLn$"Got env "++ show (length env) -- Same effect!!
+  -- p <- getEnv "PATH"; putStrLn$"PATH "++p -- This does NOT trigger it.
+  --
+  -- writeFile "/tmp/fooooo" "hello\n" -- This does NOT trigger it.
+#else   
+  putStrLn$ "SKIPPING read of num capabilities..."
 #endif
   -- par ncap
   par 1
