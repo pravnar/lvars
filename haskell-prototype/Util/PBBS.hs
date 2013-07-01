@@ -2,12 +2,7 @@
 
 -- | Utilities for reading PBBS data files, etc.
 
-
-#ifdef MAINMOD
-module Main where 
-#else
 module Util.PBBS where
-#endif
 
 import Control.DeepSeq
 import Control.Exception (evaluate)
@@ -39,6 +34,7 @@ parReadNats :: forall nty . (U.Unbox nty, Num nty, Eq nty) =>
 parReadNats bs = do
 #ifdef ACTIVATE_BUG  
   ncap <- getNumCapabilities
+  putStrLn$ "Read num capabilities as "++show ncap
 #endif
   -- par ncap
   par 1
