@@ -7,7 +7,7 @@ module Util.PBBS where
 import Control.DeepSeq
 import Control.Exception (evaluate)
 
-import Control.Concurrent (getNumCapabilities, setNumCapabilities)
+import Control.Concurrent (getNumCapabilities)
 import GHC.Conc (getNumProcessors)
 import Data.Word
 import Data.Maybe (fromJust)
