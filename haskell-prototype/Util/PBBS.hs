@@ -21,10 +21,27 @@ import System.Environment
 
 --------------------------------------------------------------------------------
 
+#if 0
+-- Guaranteed bad:
+{-# NOINLINE parReadNats #-}
+{-# INLINE readNatsPartial #-}
+#endif
+
+----------------------------------------------
+-- If the types are monomorphic, we stay fast:
+#define MONOTYPE
+{-# NOINLINE parReadNats #-}
+{-# NOINLINE readNatsPartial #-}
+----------------------------------------------
+
+#ifdef MONOTYPE
+parReadNats :: S.ByteString -> IO [PartialNums Word]
+#else
 -- | Read all the decimal numbers from a Bytestring.  This is very permissive -- all
 -- non-digit characters are treated as separators.
 parReadNats :: forall nty . (U.Unbox nty, Num nty, Eq nty) =>
                S.ByteString -> IO [PartialNums nty]
+#endif               
 parReadNats bs = do
 #ifdef ACTIVATE_BUG  
   ncap <- getNumCapabilities
@@ -44,22 +61,11 @@ parReadNats bs = do
    par ncap = do 
         let chunks = 1 -- ncap * overPartition
             (each,left) = S.length bs `quotRem` chunks
-
-#if 0
-            mapper ind = do
-              let howmany = each + if ind==chunks-1 then left else 0
-                  mychunk = S.take howmany $ S.drop (ind * each) bs
-              partial <- liftIO (readNatsPartial mychunk)
-              return [partial]
-            reducer a b = return (a++b)
-        runParIO $                   
-          parMapReduceRangeThresh 1 (InclusiveRange 0 (chunks - 1))
-                                     mapper reducer []
-#else
-        putStrLn "Now this is getting ridiculous..."
+        -- "Now this is getting ridiculous... this is THE SAME"
+        -- " as the sequential version now.  And still bugs":
         res <- readNatsPartial bs
         return [res]
-#endif
+
                           
 -- Partially parsed number fragments
 --------------------------------------------------------------------------------
@@ -101,15 +107,16 @@ instance NFData (PartialNums n) where
 -- Efficient sequential parsing
 --------------------------------------------------------------------------------
 
-{-# SPECIALIZE readNatsPartial :: S.ByteString -> IO (PartialNums Word) #-}
-{-# SPECIALIZE readNatsPartial :: S.ByteString -> IO (PartialNums Word32) #-}
-{-# SPECIALIZE readNatsPartial :: S.ByteString -> IO (PartialNums Word64) #-}
-
+#ifdef MONOTYPE
+readNatsPartial :: S.ByteString -> IO (PartialNums Word)
+#else
+{- SPECIALIZE readNatsPartial :: S.ByteString -> IO (PartialNums Word) -}
 -- | Sequentially reads all the unsigned decimal (ASCII) numbers within a a
 -- bytestring, which is typically a slice of a larger bytestring.  Extra complexity
 -- is needed to deal with the cases where numbers are cut off at the boundaries.
 readNatsPartial :: forall nty . (U.Unbox nty, Num nty, Eq nty) =>
                S.ByteString -> IO (PartialNums nty)
+#endif
 readNatsPartial bs
  | bs == S.empty = return$ Single (MiddleFrag 0 0)
  | otherwise = do   
@@ -132,8 +139,8 @@ readNatsPartial bs
    else
     return$ Compound Nothing pref w
  where
-   loop :: Int -> Int -> nty -> M.IOVector nty -> Word8 -> S.ByteString ->
-           IO (M.IOVector nty, Maybe (LeftFrag nty), Int)
+--   loop :: Int -> Int -> nty -> M.IOVector nty -> Word8 -> S.ByteString ->
+--           IO (M.IOVector nty, Maybe (LeftFrag nty), Int)
    loop !lmt !ind !acc !vec !nxt !rst
      -- Extend the currently accumulating number in 'acc':
      | digit nxt =
