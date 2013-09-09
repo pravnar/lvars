@@ -73,10 +73,12 @@ instance ParFuture MP.Par where
   spawn_ = MP.spawn_
   spawnP = MP.spawnP
 
+par :: (ParFuture p, FutContents p String) => p String
+par = do x <- spawn $ return "hello"
+         get x
+
 test2 :: String
-test2 = MP.runPar $ do
-  x <- spawn $ return "hello"
-  get x
+test2 = MP.runPar par
 
 instance ParFuture (LVish.Par d s) where
   type Future      (LVish.Par d s) a = LI.IVar s a   
@@ -85,6 +87,4 @@ instance ParFuture (LVish.Par d s) where
   get iv = LI.get iv
 
 test3 :: String
-test3 = LVish.runPar $ do
-  x <- spawn $ return "hello"
-  get x
+test3 = LVish.runPar par
