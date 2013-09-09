@@ -38,8 +38,6 @@ import           Control.DeepSeq (NFData, deepseq)
 import qualified Control.Monad.Par.Class as PC
 #endif
 
-import qualified NewClass as PC
-
 ------------------------------------------------------------------------------
 -- IVars implemented on top of (the idempotent implementation of) LVars
 ------------------------------------------------------------------------------
@@ -138,12 +136,6 @@ spawnP a = spawn (return a)
 {-# INLINE put #-}
 put :: (Eq a, NFData a) => IVar s a -> a -> Par d s ()
 put v a = deepseq a (put_ v a)
-
-instance PC.ParFuture (IVar s) (Par d s) where
---   type Future a = IVar Frzn a
-  type FutContents a = (Eq a)
-  spawn_ m = spawn_ m
-  get iv = get iv
 
 #ifdef USE_ABSTRACT_PAR
   -- MIN_VERSION_abstract_par(0,4,0)
