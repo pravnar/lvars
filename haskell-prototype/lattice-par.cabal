@@ -105,7 +105,8 @@ library
   ghc-options: -O2 -threaded -rtsopts
   if flag(abstract-par) 
     cpp-options: -DUSE_ABSTRACT_PAR
-    build-depends:  abstract-par >=0.4
+    build-depends:  abstract-par >= 0.3
+                    -- abstract-par >=0.4
                     -- monad-par-extras >=0.4
   if flag(debug)
      cpp-options: -DDEBUG_LVAR

@@ -5,7 +5,8 @@
 {-# LANGUAGE DataKinds #-}
 {-# LANGUAGE InstanceSigs #-}
 {-# LANGUAGE CPP #-}
-{-# LANGUAGE MagicHash #-} 
+{-# LANGUAGE MagicHash #-}
+{-# LANGUAGE ExistentialQuantification #-} 
 module Data.LVar.IVar
        (IVar, 
         new, get, put, put_,
@@ -30,9 +31,14 @@ import qualified Control.LVish.SchedIdempotent as LI
 import           Data.Traversable (traverse)
 import           GHC.Prim (unsafeCoerce#)
 
+import           Control.DeepSeq (NFData, deepseq)
+
+#undef USE_ABSTRACT_PAR
 #ifdef USE_ABSTRACT_PAR
 import qualified Control.Monad.Par.Class as PC
 #endif
+
+import qualified NewClass as PC
 
 ------------------------------------------------------------------------------
 -- IVars implemented on top of (the idempotent implementation of) LVars
@@ -132,6 +138,12 @@ spawnP a = spawn (return a)
 {-# INLINE put #-}
 put :: (Eq a, NFData a) => IVar s a -> a -> Par d s ()
 put v a = deepseq a (put_ v a)
+
+instance PC.ParFuture (IVar s) (Par d s) where
+--   type Future a = IVar Frzn a
+  type FutContents a = (Eq a)
+  spawn_ m = spawn_ m
+  get iv = get iv
 
 #ifdef USE_ABSTRACT_PAR
   -- MIN_VERSION_abstract_par(0,4,0)
