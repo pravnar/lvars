@@ -2,15 +2,16 @@
 
 {-# LANGUAGE TypeFamilies #-}
 {-# LANGUAGE DefaultSignatures #-}
-{-# LANGUAGE EmptyDataDecls #-}
 
 -- | This module is NOT Safe-Haskell, but it must be used to create
 -- new LVar types.
 module Control.LVish.DeepFrz.Internal
        (
-         DeepFrz(..), Frzn, Trvrsbl 
+         DeepFrz(..)
        )
        where
+
+import Control.LVish (Par)
 
 -- | DeepFreezing is type-level (guaranteed O(1) time complexity)
 -- operation.  It marks an LVar and its contents (recursively) as
@@ -23,20 +24,11 @@ class DeepFrz a where
   type FrzType a :: *
 
   -- | Private: not exported to the end user.
-  frz :: a -> FrzType a
+  frz :: Par d s a -> Par d s (FrzType a)
 
   -- | While `frz` is not exported, users may opt-in to the `DeepFrz`
   -- class for their datatypes and take advantage of the default instance.
   -- Doing so REQUIRES that `type FrzType a = a`.
   default frz :: a -> a 
   frz a = a 
-
--- | An uninhabited type that signals an LVar has been frozen.
---   LVars should use this inplace of their `s` parameter.
-data Frzn
-
--- | An uninhabited type that signals an LVar is not only frozen, but
--- it may be traversed in whatever order its internal representation
--- dictates.
-data Trvrsbl 
 

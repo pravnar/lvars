@@ -20,7 +20,7 @@ import           Control.Monad.IO.Class
 import           Control.LVish.MonadToss
 import           Control.Applicative
 import qualified Control.LVish.SchedIdempotent as L
-import           Control.LVish.DeepFrz.Internal (Frzn, Trvrsbl)
+import           Control.LVish.DeepFrz.Types (Frzn, Trvrsbl)
 import qualified Data.Foldable    as F
 import           Data.List (sort)
 

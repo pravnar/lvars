@@ -14,8 +14,7 @@ module Control.LVish.DeepFrz
          DeepFrz(), FrzType,
          Frzn, Trvrsbl,
 
-         runParThenFreeze,
-         runParThenFreezeIO,
+--         runParThenFreeze, runParThenFreezeIO,
          
        ) where
 
@@ -24,10 +23,16 @@ import Data.Word
 import GHC.Prim (unsafeCoerce#)
 
 -- import Control.LVish (LVarData1(..))
-import Control.LVish.DeepFrz.Internal (DeepFrz(..), Frzn, Trvrsbl)
+import Control.LVish.DeepFrz.Internal (DeepFrz(..))
+import Control.LVish.DeepFrz.Types (Frzn, Trvrsbl)
 import Control.LVish.Internal (Determinism(..))
 import Control.LVish (Par, runPar, runParIO)
 --------------------------------------------------------------------------------
+
+-- -- | This modifies a Par computation to freeze the result before running.
+-- freezePar :: DeepFrz a => Par d s a -> Par d s (FrzType a)
+-- freezePar = frz
+--  -- This is exposed to users, unlike `frz`!!
 
 -- | Under normal conditions, calling a `freeze` operation makes a `Par` computation
 -- quasi-deterministic.  However, if we freeze once all LVar operations are completed
@@ -44,8 +49,8 @@ import Control.LVish (Par, runPar, runParIO)
 -- Significantly, the freeze at the end of `runParThenFreeze` has NO runtime cost, in
 -- spite of the fact that it enables a DEEP (recursive) freeze of the value returned
 -- by the `Par` computation.
-runParThenFreeze :: DeepFrz a => (forall s . Par Det s a) -> FrzType a
-runParThenFreeze p = frz $ runPar p
+runParThenFreeze :: DeepFrz a => (forall s . Par Det s a) -> (FrzType a)
+runParThenFreeze p = runPar $ frz p
 
 -- | This version works for non-deterministic computations as well.
 -- 
@@ -53,10 +58,13 @@ runParThenFreeze p = frz $ runPar p
 -- advantage vs. doing your own freeze at the end of your computation.  Namely, when
 -- you use `runParThenFreezeIO`, there is an implicit barrier before the final
 -- freeze.  Further, DeepFrz has no runtime overhead, whereas regular freezing has a cost.
+
+{-
 runParThenFreezeIO :: DeepFrz a => (forall s. Par d s a) -> IO (FrzType a)
 runParThenFreezeIO p = do
   x <- runParIO p
   return $ frz x
+-}
 
 {-
 -- This won't work because it conflicts with other instances such as "Either":
@@ -65,6 +73,7 @@ instance (LVarData1 f, DeepFrz a) => DeepFrz (f s a) where
   frz = unsafeCoerce#
 -}
 
+{-
 #define MKFRZINST(T) instance DeepFrz T where type FrzType T = T
 
 MKFRZINST(Int)
@@ -139,3 +148,4 @@ instance (DeepFrz a, DeepFrz b, DeepFrz c, DeepFrz d, DeepFrz e,
   type FrzType (a,b,c,d,e,f,g,h,i) = (FrzType a, FrzType b, FrzType c, FrzType d, FrzType e,
                                       FrzType f, FrzType g, FrzType h, FrzType i)
   frz = unsafeCoerce#
+-}

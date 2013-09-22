@@ -40,7 +40,7 @@ import           Data.Traversable (Traversable)
 import qualified Data.Foldable    as F 
 import           Control.Applicative
 import           Control.LVish.Internal
-import           Control.LVish.DeepFrz.Internal (Frzn, Trvrsbl)
+import           Control.LVish.DeepFrz.Types (Frzn, Trvrsbl)
 import qualified Control.LVish.SchedIdempotent as L
 import           System.IO.Unsafe (unsafePerformIO, unsafeDupablePerformIO)
 

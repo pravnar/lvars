@@ -159,6 +159,22 @@ v2b = runParIO $
 --         mapM_ IV.get ivs -- Join point.
 --         return s
 
+-- v2c :: S.Set Int
+v2d :: IV.IVar Frzn (IV.IVar Frzn String)
+v2d = runPar $ freezePar par
+  -- runParThenFreeze par
+  where
+    par :: Par Det s (IV.IVar s (IV.IVar s String))
+    par = 
+     do v  <- IV.new
+        v2 <- IV.new
+        IV.put_ v v2
+        IV.put_ v2 "hi"
+        return v
+
+
+
+
 -- | Simple callback test.
 -- case_v3a :: Assertion
 -- case_v3a = v3a >>= assertEqual "simple callback test"
