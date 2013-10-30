@@ -1,7 +1,6 @@
 -- | Breadth-first search algorithms in lvish
 
-{-# LANGUAGE CPP, ScopedTypeVariables #-}
-{-# LANGUAGE BangPatterns, RankNTypes #-}
+{-# LANGUAGE CPP #-}
 
 module Algorithms.BFS where
 
@@ -185,3 +184,4 @@ bfs_async_arr2 gr@(AdjacencyGraph vvec evec) start = do
   -- logStrLn $" [bfs] Seeding with start vertex... "
   NArr.put arr (fromIntegral start) 1
   return arr
+

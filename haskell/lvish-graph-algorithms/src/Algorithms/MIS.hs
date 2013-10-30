@@ -1,7 +1,7 @@
 -- | Maximum independent set algorithms in lvish
 
 {-# LANGUAGE CPP, ScopedTypeVariables #-}
-{-# LANGUAGE BangPatterns, RankNTypes #-}
+{-# LANGUAGE BangPatterns #-}
 
 module Algorithms.MIS where
 

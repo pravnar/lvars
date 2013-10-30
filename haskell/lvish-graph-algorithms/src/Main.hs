@@ -1,5 +1,4 @@
 {-# LANGUAGE CPP, ScopedTypeVariables #-}
-{-# LANGUAGE BangPatterns, RankNTypes #-}
 
 import Data.Set as Set
 
@@ -325,3 +324,4 @@ main = do
 -- Unsafe version, fix this:
 runParIO_ :: (Par d s a) -> IO ()
 runParIO_ (WrapPar p) = L.runParIO p >> return ()
+

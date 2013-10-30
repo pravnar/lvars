@@ -1,5 +1,4 @@
-{-# LANGUAGE CPP, ScopedTypeVariables #-}
-{-# LANGUAGE BangPatterns, RankNTypes #-}
+{-# LANGUAGE CPP #-}
 
 module Utils where
 
@@ -164,3 +163,4 @@ forVec vec fn = loop 0
                          loop (i+1)
 
 type ParFor d s = (Int,Int) -> (Int -> Par d s ()) -> Par d s ()
+
