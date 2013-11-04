@@ -3,7 +3,7 @@
 {-# LANGUAGE CPP, ScopedTypeVariables #-}
 {-# LANGUAGE BangPatterns #-}
 
-module Algorithms.MIS where
+module Data.LVar.Graph.MIS where
 
 import Data.Set as Set
 

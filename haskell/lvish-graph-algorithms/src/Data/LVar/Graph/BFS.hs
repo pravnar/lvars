@@ -2,7 +2,7 @@
 
 {-# LANGUAGE CPP #-}
 
-module Algorithms.BFS where
+module Data.LVar.Graph.BFS where
 
 import Data.Set as Set
 

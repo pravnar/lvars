@@ -3,8 +3,8 @@
 import Data.Set as Set
 
 import Utils
-import Algorithms.BFS
-import Algorithms.MIS
+import Data.LVar.Graph.BFS
+import Data.LVar.Graph.MIS
 
 -- Benchmark utils:
 import PBBS.FileReader
